@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { makeStyles } from '@material-ui/core';
+import { getLocalStorage, isValid } from 'src/helpers';
 import NavBar from './NavBar';
 import TopBar from './TopBar';
 
@@ -36,6 +37,14 @@ const useStyles = makeStyles((theme) => ({
 const DashboardLayout = () => {
   const classes = useStyles();
   const [isMobileNavOpen, setMobileNavOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = getLocalStorage('_token');
+    if (!isValid(token)) {
+      navigate('/login', { replace: true });
+    }
+  }, []);
 
   return (
     <div className={classes.root}>

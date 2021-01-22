@@ -12,6 +12,7 @@ import {
   makeStyles
 } from '@material-ui/core';
 import { Search as SearchIcon } from 'react-feather';
+import { useNavigate } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) => ({
   root: {},
@@ -25,7 +26,10 @@ const useStyles = makeStyles((theme) => ({
 
 const Toolbar = ({ className, ...rest }) => {
   const classes = useStyles();
-
+  const navigate = useNavigate();
+  const redirectCustomer = () => {
+    navigate('/app/add-customer', { replace: true });
+  };
   return (
     <div
       className={clsx(classes.root, className)}
@@ -44,6 +48,7 @@ const Toolbar = ({ className, ...rest }) => {
         <Button
           color="primary"
           variant="contained"
+          onClick={redirectCustomer}
         >
           Add customer
         </Button>

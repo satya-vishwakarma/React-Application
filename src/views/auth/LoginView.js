@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import * as Yup from 'yup';
 import { Formik } from 'formik';
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
+
 import {
   Box,
   Button,
@@ -16,6 +19,9 @@ import FacebookIcon from 'src/icons/Facebook';
 import GoogleIcon from 'src/icons/Google';
 import Page from 'src/components/Page';
 
+import { login } from '../../actions/loginActions';
+import Notifications from '../errors/Notifications';
+
 const useStyles = makeStyles((theme) => ({
   root: {
     backgroundColor: theme.palette.background.dark,
@@ -25,15 +31,18 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const LoginView = () => {
+const LoginView = (props) => {
   const classes = useStyles();
   const navigate = useNavigate();
+  const [nofification, setNofificationMsg] = useState([]);
+  const [nofiType, setNofiType] = useState('error');
 
   return (
-    <Page
-      className={classes.root}
-      title="Login"
-    >
+    <Page className={classes.root} title="Login">
+      {nofification.map((item) => (
+        <Notifications open type={nofiType} desc={item} />
+      ))}
+
       <Box
         display="flex"
         flexDirection="column"
@@ -43,16 +52,36 @@ const LoginView = () => {
         <Container maxWidth="sm">
           <Formik
             initialValues={{
-              email: 'demo@devias.io',
-              password: 'Password123'
+              email: 'sam@gmail.com',
+              password: 'samsung'
             }}
             validationSchema={Yup.object().shape({
-              email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-              password: Yup.string().max(255).required('Password is required')
+              email: Yup.string()
+                .email('Must be a valid email')
+                .max(255)
+                .required('Email is required'),
+              password: Yup.string()
+                .max(255)
+                .required('Password is required')
             })}
             onSubmit={(values, actions) => {
-              console.log( values ,  actions   )
-            //  navigate('/app/dashboard', { replace: true });
+              setNofificationMsg([]);
+              props.login({
+                emailId: values.email,
+                password: values.password
+              })
+                .then((response) => {
+                  if (typeof response.payload.error !== 'undefined') {
+                    actions.setSubmitting(false);
+                    setNofificationMsg([response.payload.error.data.messages]);
+                  } else {
+                    setNofificationMsg(['Login successfully']);
+                    setNofiType('success');
+                    setTimeout(() => {
+                      navigate('/app/dashboard', { replace: true });
+                    }, 1000);
+                  }
+                });
             }}
           >
             {({
@@ -66,10 +95,7 @@ const LoginView = () => {
             }) => (
               <form onSubmit={handleSubmit}>
                 <Box mb={3}>
-                  <Typography
-                    color="textPrimary"
-                    variant="h2"
-                  >
+                  <Typography color="textPrimary" variant="h2">
                     Sign in
                   </Typography>
                   <Typography
@@ -80,15 +106,8 @@ const LoginView = () => {
                     Sign in on the internal platform
                   </Typography>
                 </Box>
-                <Grid
-                  container
-                  spacing={3}
-                >
-                  <Grid
-                    item
-                    xs={12}
-                    md={6}
-                  >
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6}>
                     <Button
                       color="primary"
                       fullWidth
@@ -100,11 +119,7 @@ const LoginView = () => {
                       Login with Facebook
                     </Button>
                   </Grid>
-                  <Grid
-                    item
-                    xs={12}
-                    md={6}
-                  >
+                  <Grid item xs={12} md={6}>
                     <Button
                       fullWidth
                       startIcon={<GoogleIcon />}
@@ -116,10 +131,7 @@ const LoginView = () => {
                     </Button>
                   </Grid>
                 </Grid>
-                <Box
-                  mt={3}
-                  mb={1}
-                >
+                <Box mt={3} mb={1}>
                   <Typography
                     align="center"
                     color="textSecondary"
@@ -166,17 +178,10 @@ const LoginView = () => {
                     Sign in now
                   </Button>
                 </Box>
-                <Typography
-                  color="textSecondary"
-                  variant="body1"
-                >
+                <Typography color="textSecondary" variant="body1">
                   Don&apos;t have an account?
                   {' '}
-                  <Link
-                    component={RouterLink}
-                    to="/register"
-                    variant="h6"
-                  >
+                  <Link component={RouterLink} to="/register" variant="h6">
                     Sign up
                   </Link>
                 </Typography>
@@ -189,4 +194,15 @@ const LoginView = () => {
   );
 };
 
-export default LoginView;
+LoginView.propTypes = {
+  login: PropTypes.func
+};
+
+const mapDispatchToProps = { login };
+
+function mapStateToProps(state) {
+  return {
+    info: state.LoginReducer
+  };
+}
+export default connect(mapStateToProps, mapDispatchToProps)(LoginView);
